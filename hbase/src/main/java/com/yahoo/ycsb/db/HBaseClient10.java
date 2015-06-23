@@ -43,6 +43,11 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import org.apache.hadoop.hbase.trace.SpanReceiverHost; //hbase-common-1.0.1.1.jar
+import org.apache.htrace.Sampler; //htrace-core.jar
+import org.apache.htrace.Trace;
+import org.apache.htrace.TraceScope;
+
 import java.io.IOException;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -187,6 +192,9 @@ public class HBaseClient10 extends com.yahoo.ycsb.DB
     public int read(String table, String key, Set<String> fields, HashMap<String,ByteIterator> result)
     {
         //if this is a "new" table, init HTable object.  Else, use existing one
+        SpanReceiverHost.getInstance(config);
+        TraceScope ts = Trace.startSpan("Gets", Sampler.ALWAYS);
+        try {
         if (!_tableName.equals(table)) {
             _table = null;
             try
@@ -208,6 +216,7 @@ public class HBaseClient10 extends com.yahoo.ycsb.DB
                 System.out.println("Doing read from HBase columnfamily "+_columnFamily);
                 System.out.println("Doing read for key: "+key);
             }
+
             Get g = new Get(Bytes.toBytes(key));
             if (fields == null) {
                 g.addFamily(_columnFamilyBytes);
@@ -241,6 +250,9 @@ public class HBaseClient10 extends com.yahoo.ycsb.DB
                 System.out.println("Result for field: "+Bytes.toString(CellUtil.cloneQualifier(c))+
                         " is: "+Bytes.toString(CellUtil.cloneValue(c)));
             }
+        }
+        } finally {
+            ts.close();
         }
         return Ok;
     }

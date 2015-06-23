@@ -45,6 +45,12 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 
+//import org.apache.hadoop.hdfs.HdfsConfiguration;
+import org.apache.hadoop.hbase.trace.SpanReceiverHost; //hbase-common-1.0.1.1.jar
+import org.apache.htrace.Trace; //htrace-core.jar
+import org.apache.htrace.Sampler;
+import org.apache.htrace.TraceScope;
+
 /**
  * HBase client for YCSB framework
  */
@@ -145,6 +151,9 @@ public class HBaseClient extends com.yahoo.ycsb.DB
      */
     public int read(String table, String key, Set<String> fields, HashMap<String,ByteIterator> result)
     {
+	SpanReceiverHost.getInstance(config);	
+	TraceScope ts = Trace.startSpan("Read", Sampler.ALWAYS);
+
         //if this is a "new" table, init HTable object.  Else, use existing one
         if (!_table.equals(table)) {
             _hTable = null;
@@ -167,6 +176,7 @@ public class HBaseClient extends com.yahoo.ycsb.DB
         System.out.println("Doing read from HBase columnfamily "+_columnFamily);
         System.out.println("Doing read for key: "+key);
         }
+
             Get g = new Get(Bytes.toBytes(key));
           if (fields == null) {
             g.addFamily(_columnFamilyBytes);
@@ -187,6 +197,11 @@ public class HBaseClient extends com.yahoo.ycsb.DB
             //do nothing for now...need to understand HBase concurrency model better
             return ServerError;
         }
+	finally 
+	{
+	    if (ts != null) ts.close();
+	}
+	
 
   for (KeyValue kv : r.raw()) {
     result.put(

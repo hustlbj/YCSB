@@ -1,4 +1,6 @@
 Yahoo! Cloud System Benchmark (YCSB)
+This is a copy of YCSB!!! And I only focus on YCSB core and hbase client, so I ignoed the others. Then I modified the YCSB/pom.xml, YCSB/hbase/pom.xml and YCSB/hbase/src, to enable htrace on hbase client. It succeeded finally with htrace-core-3.1.0-incubating.jar.
+------BJ.L.
 ====================================
 [![Build Status](https://travis-ci.org/brianfrankcooper/YCSB.png?branch=master)](https://travis-ci.org/brianfrankcooper/YCSB)
 
